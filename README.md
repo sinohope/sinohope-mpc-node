@@ -1,27 +1,44 @@
-# Sinohope MPC Node
+# Sinohope MPC Node 
 
-本项目包含了运行Sinohope MPC Node所需要的脚本和配置文件，位于`env/production`。
+**Sinohope: All-in-one Platform for Digital Assets Custody.**
 
-请确保`node.sh`和`config.toml`在同一目录下，如果不需要配置回调服务则可以直接运行。
+This project is part of the Sinohope WaaS service. For more information, please refer to [sinohope.com](https://www.sinohope.com/) and [docs.sinohope.com](https://docs.sinohope.com/).
 
-MPC Node 目前支持的平台：
+This project contains the scripts and configuration files needed to run the Sinohope MPC Node, located in `env/production`. 
+
+Please make sure `node.sh` and `config.toml` are in the same directory. You can run it directly if you do not need to configure the callback service.
+
+MPC Node currently supports the following platforms:
 
 + macOS/amd64
-+ macOS/arm64
++ macOS/arm64  
 + Linux/amd64
 + Linux/arm64
 
-### 使用说明
 
-`node.sh`脚本目前支持的命令及作用：
+## ❗️❗️IMPORTANT❗️❗️: On Database Backup
 
-+ init: 初始化MPC Node，首次部署时使用；
-+ info: 查询已经初始化过的MPC Node信息，包括：node id、回调服务通信公钥；
-+ reset: 重置用户密码；
-+ start: 启动MPC Node；
-+ stop: 停止并移除正在运行的MPC Node docker实例；
+The local database file of the MPC Node (filename `asset.db`, stored by default in the deployment directory of the MPC Node) stores important data such as your MPC key share, with all data stored encrypted using a strong key derived from the password you set for the MPC Node via the KDF function. 
 
-**命令示例：**
+The MPC key shares are critical to the security and availability of all your digital assets. The MPC key shares managed by Sinohope are stored and backed up by the platform through a series of highly available and disaster recovery solutions across multiple layers and regions, and you can also apply for backups of all 3 MPC key shares for your organization, thus fully controlling all 3 MPC key shares.
+
+**You must complete secure redundant backups of the MPC key share in your local database file yourself.** Please take adequate security measures, geographically distributed multi-copy backups of your database file, and the password you set for the MPC Node.
+
+**It is recommended to keep the database file and password separately to reduce the risk of data leakage.**
+
+**If your MPC Node server or service fails, or data is damaged, or unavailable, etc. in the future, you can only redeploy the MPC Node service by restoring from your backed up database file and password to recover. Sinohope will be unable to help you restore your MPC Node service!**
+
+## Instructions
+
+The `node.sh` script currently supports the following commands and functions:
+
+- `init`: Initialize the MPC Node, use when first deploying;
+- `info`: Query information of an initialized MPC Node, including: node id, public key for callback service;
+- `reset`: Reset user password; 
+- `start`: Start the MPC Node;
+- `stop`: Stop and remove the running MPC Node docker container;
+
+**Command Examples:**
 
 1. init
 
@@ -41,17 +58,13 @@ MPC Node 目前支持的平台：
    {"data":{"node_id":"sinoMzA1OTMwMTMwNjA3MmE4NjQ4Y2UzZDAyMDEwNjA4MmE4NjQ4Y2UzZDAzMDEwNzAzNDIwMDA0MmFmNGY0Y2I5ZmM1MGFjMWUzNzIxMzM2Y2IyMmJmYzMzMDg4YjJmNGM4OTEyZjZhNDE4ZmNlY2JmZWFhMzIwMjNlMzg0MGE1YjBkODI3YWE5ODE1N2Y1MTE5Y2M2YTdiYzQ2NWNmN2EzNzc0MTkwNjdmYzc5ZGNjMjQ0YjgxZTU=","public_key":"-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKvT0y5/FCsHjchM2yyK/wzCIsvTI\nkS9qQY/Oy/6qMgI+OEClsNgnqpgVf1EZzGp7xGXPejd0GQZ/x53MJEuB5Q==\n-----END PUBLIC KEY-----\n"},"status":"ok"}
    ```
 
-   说明：首先脚本会自动做一些环境的检查工作，如判断是否安装了Docker，判断用户的控住权限等。init命令的主要任务是初始化账户信息，包括：说明：首先脚本会自动做一些环境的检查工作，如判断是否安装了Docker，判断用户的控住权限等。init命令的主要任务是初始化账户信息，包括：
+  **Explanation**: First, the script will automatically do some environmental checks, such as determining if Docker is installed, checking the user's root permissions, etc. The main tasks of the init command are to initialize account information, including:
 
-   - 给 MPC 节点设置一个密码，这个密码用于保护您的私钥分片 及其他私密数据，**请您妥善保管，切勿泄漏，并且做好安全冗余备份**。节点启动时会要求输入该密码。
-     - 您可采用如下措施实现密码自动输入：打开config.toml配置文件，[storage]配置项中增加password字段：
-     - ```Shell
-       [storage]
-       db-file-path = "/tmp/mpc-node/asset.db"
-       unseal-server-address = "0.0.0.0:8080"
-       ```
-   - 创建node id， 每一个MPC Node都有一个唯一标识id，您将需要使用该 node id 将您的MPC 节点与您的 WaaS 组织账号做唯一关联。
-   - 创建与callback-server通信时的ECDSA密钥对。
+   - Set a password for the MPC node. This password is used to protect your MPC key share and other private data. **Please keep it properly and do not leak it, and make secure redundant backups.** The node will require entering this password when starting up.
+
+   - Create a node id. Each MPC Node has a unique id that you will need to use to uniquely associate your MPC node with your WaaS account.
+
+   - Create an ECDSA key pair for communicating with the callback server.
 
 2. info
 
@@ -71,8 +84,6 @@ MPC Node 目前支持的平台：
    }
    ```
 
-   
-
 3. reset
 
    ```
@@ -87,7 +98,6 @@ MPC Node 目前支持的平台：
    {"status": "ok", "data": "re-bkey success"}
    ```
 
-   
 
 4. start
 
@@ -103,12 +113,11 @@ MPC Node 目前支持的平台：
 
    ```
    {
-     "data":"in-bkey success",    // 密码校验成功
+     "data":"in-bkey success",
      "status":"ok"
    }
    ```
 
-   
 
 5. stop
 
@@ -116,13 +125,13 @@ MPC Node 目前支持的平台：
    ./node.sh stop
    ```
 
-### 运行多个MPC Node实例
+## Running Multiple MPC Node Instances  
 
-`node.sh`脚本默认启动的MPC Node实例名称为npc-node，通过第2个参数，支持运行多个MPC Node。
+The `node.sh` script by default starts an MPC Node instance named `npc-node`. Through the 2nd parameter, it supports running multiple MPC Nodes.
 
-示例：
+Example: 
 
-####  init
+### init
 
 ```
 ./node.sh init mpc-node-test
@@ -140,30 +149,32 @@ Retype new password:
 {"data":{"node_id":"sinoMzA1OTMwMTMwNjA3MmE4NjQ4Y2UzZDAyMDEwNjA4MmE4NjQ4Y2UzZDAzMDEwNzAzNDIwMDA0MmFmNGY0Y2I5ZmM1MGFjMWUzNzIxMzM2Y2IyMmJmYzMzMDg4YjJmNGM4OTEyZjZhNDE4ZmNlY2JmZWFhMzIwMjNlMzg0MGE1YjBkODI3YWE5ODE1N2Y1MTE5Y2M2YTdiYzQ2NWNmN2EzNzc0MTkwNjdmYzc5ZGNjMjQ0YjgxZTU=","public_key":"-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKvT0y5/FCsHjchM2yyK/wzCIsvTI\nkS9qQY/Oy/6qMgI+OEClsNgnqpgVf1EZzGp7xGXPejd0GQZ/x53MJEuB5Q==\n-----END PUBLIC KEY-----\n"},"status":"ok"}
 ```
 
-#### start
+### start
 
 ```
-./node.sh start
+./node.sh start mpc-node-test 
 checking update...
-mpc-node instance name: mpc-node, unseal server address: 127.0.0.1:10080
+mpc-node instance name: mpc-node-test, unseal server address: 127.0.0.1:10081
 4c90d02b5378651bda82c685d0bd5bcea8518ff5faad88debec5cbd599c23598
 waiting mpc-node to start...
-mpc-node started
-? Enter current password: 
+mpc-node-test started
+? Enter current password:  
 ```
 
 ```
 {
-  "data":"in-bkey success",    // 密码校验成功
+  "data":"in-bkey success",    
   "status":"ok"
 }
 ```
 
-#### stop
+### stop
 
 ```
 ./node.sh stop mpc-node-test
 ```
 
+## Callback service
 
 
+You can configure a callback service for the MPC Node to implement business risk control for the MPC Node. For details, please refer to [MPC Node Callback Mechanism](https://docs.sinohope.com/docs/develop/mpc-waas-api/quick-start/qs-2-node#4-mpc-node%E5%9B%9E%E8%B0%83%E6%9C%BA%E5%88%B6).
