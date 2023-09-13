@@ -239,9 +239,8 @@ init|info|reset|start)
 
     if [ "$1" == "info" ]; then
       RESPONSE=$(curl -s -w "\n%{http_code}" --location --request GET "http://${UNSEAL_SERVER}/sys/seal-status" \
-              --header 'Content-Type: text/plain' \
-              --data "")
-
+        --header 'Content-Type: text/plain' \
+        --data "")
     fi
 
     if [ "$1" == "reset" ]; then
@@ -269,6 +268,12 @@ init|info|reset|start)
         --data "{
             \"shard_bkey\": \"${CURRENT_PASSWORD}\"
         }")
+      HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+      if [ "$HTTP_CODE" == "200" ]; then
+        RESPONSE=$(curl -s -w "\n%{http_code}" --location --request GET "http://${UNSEAL_SERVER}/sys/seal-status" \
+          --header 'Content-Type: text/plain' \
+          --data "")
+      fi
     fi
 
     HTTP_BODY=$(echo "$RESPONSE" | sed '$d')
