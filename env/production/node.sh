@@ -259,6 +259,8 @@ init|info|reset|start)
         RESPONSE=$(curl -s -w "\n%{http_code}" --location --request GET "http://${UNSEAL_SERVER}/sys/seal-status" \
           --header 'Content-Type: text/plain' \
           --data "")
+      else
+        echo "Invalid password, please try again."
       fi
     fi
 
