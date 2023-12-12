@@ -14,6 +14,7 @@ MPC Node currently supports the following platforms:
 + macOS/arm64  
 + Linux/amd64
 + Linux/arm64
++ Ubuntu 20.04/intel SGX
 
 
 ## ❗️❗️IMPORTANT❗️❗️: On Database Backup
