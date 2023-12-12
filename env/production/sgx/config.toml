@@ -1,0 +1,41 @@
+[app]
+name = "mpc-node"
+party-id = "a"
+account-type = "2"
+
+[log]
+    # log level:
+    #   0: Panic
+    #   1: Fatal
+    #   2: Error
+    #   3: Warn
+    #   4: Info
+    #   5: Debug
+    #   6: Trace
+    [log.stdout]
+    enable = true
+    level = 6
+
+    [log.file]
+    enable = true
+    level = 6
+    path = "/tmp/mpc-node/logs/mpc-node.log"
+
+[storage]
+engine = "sgx"
+t = 1
+n = 1
+db-file-path = "/tmp/mpc-node/asset.db"
+unseal-server-address = "0.0.0.0:8080"
+
+[mpc-service]
+protocol = "wss"
+address = "api-pre.sinohope.com"
+path = "/proxy"
+
+#[callback]
+#retry-times = 60
+#sleep-seconds = 60
+#[[callback.server]]
+#  address = "http://192.168.50.208:9090/v1"
+#  public-key-path = "/tmp/mpc-node/callback_server_public.pem"
