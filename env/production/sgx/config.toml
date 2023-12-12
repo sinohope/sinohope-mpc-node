@@ -30,7 +30,7 @@ unseal-server-address = "0.0.0.0:8080"
 
 [mpc-service]
 protocol = "wss"
-address = "api-pre.sinohope.com"
+address = "api.sinohope.com"
 path = "/proxy"
 
 #[callback]
