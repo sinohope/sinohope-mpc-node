@@ -32,21 +32,27 @@ The MPC key shares are critical to the security and availability of all your dig
 ## Instructions
 
 The `node.sh` script currently supports the following commands and functions:
-
-- `init`: Initialize the MPC Node, use when first deploying;
-- `info`: Query information of an initialized MPC Node, including: node id, public key for callback service;
-- `reset`: Reset user password; 
-- `start`: Start the MPC Node;
-- `stop`: Stop and remove the running MPC Node docker container;
+- `start`:     start mpc node service in the background. this should be executed before other commands.
+- `unseal`:    enter password to unlock mpc-node, unseal needs to be executed after start.
+- `init`:      initialize mpc node service base data.
+- `info`:      show mpc node info, include node id and callback-server public key, etc.
+- `reset`:     start the reset password task and enter the old password into the cache.
+- `cmreset`:   enter new password and complete the reset password task.
+- `stop`:      stop mpc node.
+- `help`:      show command help.
 
 **Command Examples:**
 
-1. init
-
+1. start
    ```
-   ./node.sh init
+   ./node.sh sart
+   checking update...
+   mpc-node instance name: mpc-node, unseal server address: 127.0.0.1:10080
+   mpc-node
+   mpc-node server address: 127.0.0.1:10080
    ```
 
+2. init
    ```
    ./node.sh init
    checking update...
@@ -67,14 +73,27 @@ The `node.sh` script currently supports the following commands and functions:
 
    - Create an ECDSA key pair for communicating with the callback server.
 
-2. info
+3. unseal
+
+    ```
+   ./node.sh unseal
+   checking update...
+   mpc-node instance name: mpc-node, unseal server address: 127.0.0.1:10080
+   4c90d02b5378651bda82c685d0bd5bcea8518ff5faad88debec5cbd599c23598
+   waiting mpc-node to start...
+   mpc-node started
+   ? Enter current password: 
+   {
+     "data":"in-bkey success",
+     "status":"ok"
+   }
+   ```
+
+4. info
 
    ```
    ./node.sh info   
    checking update...
-   ```
-
-   ```
    {
      "data": {
        "node_id": "sinoMzA1OTMwMTMwNjA3MmE4NjQ4Y2UzZDAyMDEwNjA4MmE4NjQ4Y2UzZDAzMDEwNzAzNDIwMDA0MmFmNGY0Y2I5ZmM1MGFjMWUzNzIxMzM2Y2IyMmJmYzMzMDg4YjJmNGM4OTEyZjZhNDE4ZmNlY2JmZWFhMzIwMjNlMzg0MGE1YjBkODI3YWE5ODE1N2Y1MTE5Y2M2YTdiYzQ2NWNmN2EzNzc0MTkwNjdmYzc5ZGNjMjQ0YjgxZTU=",
@@ -85,7 +104,7 @@ The `node.sh` script currently supports the following commands and functions:
    }
    ```
 
-3. reset
+5. reset
 
    ```
    ./node.sh reset
@@ -93,34 +112,23 @@ The `node.sh` script currently supports the following commands and functions:
    ? Enter current password: 
    New password:
    Retype new password:
+   {"status": "ok", "data": "re-bkey-init success"}
    ```
 
+
+6. cmreset
+
    ```
+   ./node.sh cmreset
+   checking update...
+   ? Enter current password: 
+   New password:
+   Retype new password:
    {"status": "ok", "data": "re-bkey success"}
    ```
 
 
-4. start
-
-   ```
-   ./node.sh start
-   checking update...
-   mpc-node instance name: mpc-node, unseal server address: 127.0.0.1:10080
-   4c90d02b5378651bda82c685d0bd5bcea8518ff5faad88debec5cbd599c23598
-   waiting mpc-node to start...
-   mpc-node started
-   ? Enter current password: 
-   ```
-
-   ```
-   {
-     "data":"in-bkey success",
-     "status":"ok"
-   }
-   ```
-
-
-5. stop
+7. stop
 
    ```
    ./node.sh stop
@@ -132,48 +140,88 @@ The `node.sh` script by default starts an MPC Node instance named `npc-node`. Th
 
 Example: 
 
-### init
+1. start
+   ```
+   ./node.sh sart mpc-node-test
+   checking update...
+   mpc-node instance name: mpc-node, unseal server address: 127.0.0.1:10080
+   mpc-node
+   mpc-node server address: 127.0.0.1:10080
+   ```
 
-```
-./node.sh init mpc-node-test
-```
+2. init
+   ```
+   ./node.sh init mpc-node-test
+   checking update...
+   mpc-node instance name: mpc-node, unseal server address: 127.0.0.1:10080
+   af026c805a03aa7bd1915ba944dbb710019e6a5cdb543311c31a29db03c4be95
+   waiting mpc-node to start...
+   mpc-node started
+   New password:
+   Retype new password:
+   {"data":{"node_id":"sinoMzA1OTMwMTMwNjA3MmE4NjQ4Y2UzZDAyMDEwNjA4MmE4NjQ4Y2UzZDAzMDEwNzAzNDIwMDA0MmFmNGY0Y2I5ZmM1MGFjMWUzNzIxMzM2Y2IyMmJmYzMzMDg4YjJmNGM4OTEyZjZhNDE4ZmNlY2JmZWFhMzIwMjNlMzg0MGE1YjBkODI3YWE5ODE1N2Y1MTE5Y2M2YTdiYzQ2NWNmN2EzNzc0MTkwNjdmYzc5ZGNjMjQ0YjgxZTU=","public_key":"-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKvT0y5/FCsHjchM2yyK/wzCIsvTI\nkS9qQY/Oy/6qMgI+OEClsNgnqpgVf1EZzGp7xGXPejd0GQZ/x53MJEuB5Q==\n-----END PUBLIC KEY-----\n"},"status":"ok"}
+   ```
 
-```
-./node.sh init
-checking update...
-mpc-node instance name: mpc-node, unseal server address: 127.0.0.1:10080
-af026c805a03aa7bd1915ba944dbb710019e6a5cdb543311c31a29db03c4be95
-waiting mpc-node to start...
-mpc-node started
-New password:
-Retype new password:
-{"data":{"node_id":"sinoMzA1OTMwMTMwNjA3MmE4NjQ4Y2UzZDAyMDEwNjA4MmE4NjQ4Y2UzZDAzMDEwNzAzNDIwMDA0MmFmNGY0Y2I5ZmM1MGFjMWUzNzIxMzM2Y2IyMmJmYzMzMDg4YjJmNGM4OTEyZjZhNDE4ZmNlY2JmZWFhMzIwMjNlMzg0MGE1YjBkODI3YWE5ODE1N2Y1MTE5Y2M2YTdiYzQ2NWNmN2EzNzc0MTkwNjdmYzc5ZGNjMjQ0YjgxZTU=","public_key":"-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKvT0y5/FCsHjchM2yyK/wzCIsvTI\nkS9qQY/Oy/6qMgI+OEClsNgnqpgVf1EZzGp7xGXPejd0GQZ/x53MJEuB5Q==\n-----END PUBLIC KEY-----\n"},"status":"ok"}
-```
+3. unseal
 
-### start
+    ```
+   ./node.sh unseal mpc-node-test
+   checking update...
+   mpc-node instance name: mpc-node, unseal server address: 127.0.0.1:10080
+   4c90d02b5378651bda82c685d0bd5bcea8518ff5faad88debec5cbd599c23598
+   waiting mpc-node to start...
+   mpc-node started
+   ? Enter current password: 
+   {
+     "data":"in-bkey success",
+     "status":"ok"
+   }
+   ```
 
-```
-./node.sh start mpc-node-test 
-checking update...
-mpc-node instance name: mpc-node-test, unseal server address: 127.0.0.1:10081
-4c90d02b5378651bda82c685d0bd5bcea8518ff5faad88debec5cbd599c23598
-waiting mpc-node to start...
-mpc-node-test started
-? Enter current password:  
-```
+4. info
 
-```
-{
-  "data":"in-bkey success",    
-  "status":"ok"
-}
-```
+   ```
+   ./node.sh info mpc-node-test
+   checking update...
+   {
+     "data": {
+       "node_id": "sinoMzA1OTMwMTMwNjA3MmE4NjQ4Y2UzZDAyMDEwNjA4MmE4NjQ4Y2UzZDAzMDEwNzAzNDIwMDA0MmFmNGY0Y2I5ZmM1MGFjMWUzNzIxMzM2Y2IyMmJmYzMzMDg4YjJmNGM4OTEyZjZhNDE4ZmNlY2JmZWFhMzIwMjNlMzg0MGE1YjBkODI3YWE5ODE1N2Y1MTE5Y2M2YTdiYzQ2NWNmN2EzNzc0MTkwNjdmYzc5ZGNjMjQ0YjgxZTU=",
+       "public_key": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKvT0y5/FCsHjchM2yyK/wzCIsvTI\nkS9qQY/Oy/6qMgI+OEClsNgnqpgVf1EZzGp7xGXPejd0GQZ/x53MJEuB5Q==\n-----END PUBLIC KEY-----\n",
+       "state": "unsealed"
+     },
+     "status": "ok"
+   }
+   ```
 
-### stop
+5. reset
 
-```
-./node.sh stop mpc-node-test
-```
+   ```
+   ./node.sh reset mpc-node-test
+   checking update...
+   ? Enter current password: 
+   New password:
+   Retype new password:
+   {"status": "ok", "data": "re-bkey-init success"}
+   ```
+
+
+6. cmreset
+
+   ```
+   ./node.sh cmreset mpc-node-test
+   checking update...
+   ? Enter current password: 
+   New password:
+   Retype new password:
+   {"status": "ok", "data": "re-bkey success"}
+   ```
+
+
+7. stop
+
+   ```
+   ./node.sh stop mpc-node-test
+   ```
 
 ## Callback service
 
