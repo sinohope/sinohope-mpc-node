@@ -87,10 +87,12 @@ show_help() {
 Usage:   $b COMMAND [OPTIONS] [OPTIONS: custom mpc-node name]
 
 Commands:
+  start     start mpc node service in the background. this should be executed before other commands.
+  unseal    enter password to unlock mpc-node, unseal needs to be executed after start.
   init      initialize mpc node service base data.
-  info      show mpc node info, include node id and callback-server public key.
-  reset     change mpc-node password.
-  start     start mpc node service in the background.
+  info      show mpc node info, include node id and callback-server public key, etc.
+  reset     start the reset password task and enter the old password into the cache.
+  cmreset   enter new password and complete the reset password task.
   stop      stop mpc node.
   help      show command help.
 
@@ -167,7 +169,6 @@ stop_container() {
 
 [ -z "$1" ] && show_help
 
-    # 默认的docker实例名称为mpc-node，如果运行脚本时指定了第2个参数则以该参数作为实例名，并随机生成一个端口
     DOCKER_INSTANCE_NAME="mpc-node"
     PORT="10080"
     if [ $# -ge 2 ]; then
@@ -182,38 +183,69 @@ check)
     ;;
 help) show_help ;;
 
-init|info|reset|start)
-    check_sys
+init|info|reset|cmreset|start|unseal)
+    
 
-    FIND_DOCKER_INSTANCE_NAME=$(docker ps -a --format '{{.Names}}' | grep -w "^${DOCKER_INSTANCE_NAME}$")
-    if [ "${FIND_DOCKER_INSTANCE_NAME}" != "${DOCKER_INSTANCE_NAME}" ]; then
-        echo "mpc-node instance name: ${DOCKER_INSTANCE_NAME}, unseal server address: ${UNSEAL_SERVER}"
-        docker run "-d" \
-            --name ${DOCKER_INSTANCE_NAME} \
-            --restart always \
-            -v "$(pwd)":/tmp/mpc-node \
-            -p ${UNSEAL_SERVER}:8080 \
-            ${IMAGE} \
-            ./custody --config=/tmp/mpc-node/config.toml --mode=mpc-node
+    if [ "$1" == "start" ]; then
+        check_sys
 
-        while true; do
-            curl --location --request GET "http://${UNSEAL_SERVER}/sys/seal-status" \
-              --header 'Content-Type: text/plain' \
-              --data '{}' >/dev/null 2>&1
+        FIND_DOCKER_INSTANCE_NAME=$(docker ps -a --format '{{.Names}}' | grep -w "^${DOCKER_INSTANCE_NAME}$")
+        if [ "${FIND_DOCKER_INSTANCE_NAME}" != "${DOCKER_INSTANCE_NAME}" ]; then
+            echo "mpc-node instance name: ${DOCKER_INSTANCE_NAME}, unseal server address: ${UNSEAL_SERVER}"
+            docker run "-d" \
+                --name ${DOCKER_INSTANCE_NAME} \
+                -v "$(pwd)":/tmp/mpc-node \
+                -p ${UNSEAL_SERVER}:8080 \
+                ${IMAGE} \
+                ./custody --config=/tmp/mpc-node/config.toml --mode=mpc-node
+        fi
+        
+        FIND_DOCKER_INSTANCE_NAME=$(docker ps  --format '{{.Names}}' | grep -w "^${DOCKER_INSTANCE_NAME}$")
+        if [ "${FIND_DOCKER_INSTANCE_NAME}" != "${DOCKER_INSTANCE_NAME}" ]; then
+            echo "mpc-node instance name: ${DOCKER_INSTANCE_NAME}, unseal server address: ${UNSEAL_SERVER}"
+            docker start "${DOCKER_INSTANCE_NAME}"
+        fi
 
-            if [ $? -eq 0 ]; then
-                echo "${DOCKER_INSTANCE_NAME} started"
-                break
-            else
-                echo "waiting ${DOCKER_INSTANCE_NAME} to start..."
-                sleep 3
-            fi
-        done
+        docker inspect "${DOCKER_INSTANCE_NAME}" > /dev/null 2>&1
+        docker_status=$?
+        if [[ $docker_status -ne 0 ]]; then
+            echo "mpc-node with name: ${DOCKER_INSTANCE_NAME} not found."
+            exit 1
+        fi
+
+        DOCKER_MAPPED_ADDRESS=$(docker inspect "${DOCKER_INSTANCE_NAME}" | grep HostPort | awk -F '"' '{print "127.0.0.1:"$4}' | head -n 1)
+        if [[ $? -ne 0 ]]; then
+            echo "mpc-node with name: ${DOCKER_INSTANCE_NAME} not existed"
+            exit 1
+        fi
+        UNSEAL_SERVER=${DOCKER_MAPPED_ADDRESS}
+        echo "mpc-node server address: ${UNSEAL_SERVER}"
+        exit 1
     fi
 
-  RESPONSE=""
-  HTTP_CODE=""
-  HTTP_BODY=""
+    FIND_DOCKER_INSTANCE_NAME=$(docker ps  --format '{{.Names}}' | grep -w "^${DOCKER_INSTANCE_NAME}$")
+    if [ "${FIND_DOCKER_INSTANCE_NAME}" != "${DOCKER_INSTANCE_NAME}" ]; then
+        echo "mpc-node with name: ${DOCKER_INSTANCE_NAME} is not start."
+        exit 1
+    fi
+    
+    docker inspect "${DOCKER_INSTANCE_NAME}" > /dev/null 2>&1
+    docker_status=$?
+    if [[ $docker_status -ne 0 ]]; then
+        echo "mpc-node with name: ${DOCKER_INSTANCE_NAME} is not start."
+        exit 1
+    fi
+
+    DOCKER_MAPPED_ADDRESS=$(docker inspect "${DOCKER_INSTANCE_NAME}" | grep HostPort | awk -F '"' '{print "127.0.0.1:"$4}' | head -n 1)
+    if [[ $? -ne 0 ]]; then
+        echo "mpc-node with name: ${DOCKER_INSTANCE_NAME} is not start."
+        exit 1
+    fi
+    UNSEAL_SERVER=${DOCKER_MAPPED_ADDRESS}
+
+    RESPONSE=""
+    HTTP_CODE=""
+    HTTP_BODY=""
     if [ "$1" == "init" ]; then
       change_password
       RESPONSE=$(curl -s -w "\n%{http_code}" --location "http://${UNSEAL_SERVER}/sys/init" \
@@ -225,8 +257,9 @@ init|info|reset|start)
 
     if [ "$1" == "info" ]; then
       RESPONSE=$(curl -s -w "\n%{http_code}" --location --request GET "http://${UNSEAL_SERVER}/sys/seal-status" \
-        --header 'Content-Type: text/plain' \
-        --data "")
+              --header 'Content-Type: text/plain' \
+              --data "")
+
     fi
 
     if [ "$1" == "reset" ]; then
@@ -236,36 +269,35 @@ init|info|reset|start)
               --data "{
                   \"shard_bkey\": \"${CURRENT_PASSWORD}\"
               }")
-      HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-      if [ "$HTTP_CODE" == "200" ]; then
-        change_password
-        RESPONSE=$(curl -s -w "\n%{http_code}" --location "http://${UNSEAL_SERVER}/sys/re-bkey" \
+    fi
+    
+    if [ "$1" == "cmreset" ]; then
+      change_password
+      RESPONSE=$(curl -s -w "\n%{http_code}" --location "http://${UNSEAL_SERVER}/sys/re-bkey" \
             --header 'Content-Type: text/plain' \
             --data "{
                 \"shard_bkey\": \"${NEW_PASSWORD}\"
             }")
-      fi
     fi
 
-    if [ "$1" == "start" ]; then
+    if [ "$1" == "unseal" ]; then
       current_password
       RESPONSE=$(curl -s -w "\n%{http_code}" --location "http://${UNSEAL_SERVER}/sys/in-bkey" \
         --header 'Content-Type: text/plain' \
         --data "{
             \"shard_bkey\": \"${CURRENT_PASSWORD}\"
         }")
-      HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-      if [ "$HTTP_CODE" == "200" ]; then
-        RESPONSE=$(curl -s -w "\n%{http_code}" --location --request GET "http://${UNSEAL_SERVER}/sys/seal-status" \
-          --header 'Content-Type: text/plain' \
-          --data "")
-      else
-        echo "Invalid password, please try again."
-      fi
     fi
 
+    HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
     HTTP_BODY=$(echo "$RESPONSE" | sed '$d')
-    echo "${HTTP_BODY}"
+    
+
+    if [[ "$HTTP_CODE" == "200" || "$HTTP_CODE" == "400" ]]; then
+        echo "${HTTP_BODY}"
+    else
+        echo "${HTTP_CODE}"
+    fi
 
     ;;
 stop)

@@ -32,9 +32,13 @@ protocol = "ws"
 address = "mpc-proxy.mpc.qa1.newhuoapps.com"
 path = ""
 
+[encrypt-signature]
+enable = false
+public-key-path = "/tmp/mpc-node/encrypt_sig_public.pem"
+
 #[callback]
 #retry-times = 60
 #sleep-seconds = 60
 #[[callback.server]]
-#  address = "http://192.168.50.208:9090/v1"
+#  address = "http://192.168.50.208:9090"
 #  public-key-path = "/tmp/mpc-node/callback_server_public.pem"
