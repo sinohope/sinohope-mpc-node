@@ -282,6 +282,7 @@ init|info|reset|cmreset|start|unseal)
             [ "$SGX" == 1 ] && device_map="--device=/dev/sgx_enclave:/dev/sgx/enclave --device=/dev/sgx_provision:/dev/sgx/provision"
             docker run $device_map  "-d" \
                 --name ${DOCKER_INSTANCE_NAME} \
+                --restart always \
                 -v "$(pwd)":/tmp/mpc-node \
                 -p ${UNSEAL_SERVER}:8080 \
                 ${IMAGE} 

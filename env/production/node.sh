@@ -194,6 +194,7 @@ init|info|reset|cmreset|start|unseal)
             echo "mpc-node instance name: ${DOCKER_INSTANCE_NAME}, unseal server address: ${UNSEAL_SERVER}"
             docker run "-d" \
                 --name ${DOCKER_INSTANCE_NAME} \
+                --restart always \
                 -v "$(pwd)":/tmp/mpc-node \
                 -p ${UNSEAL_SERVER}:8080 \
                 ${IMAGE} \
