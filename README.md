@@ -28,7 +28,7 @@ sinohope-mpc-node
 
 - After successful initialization of MPC Node, the asset.db file and logs directory will be automatically created.
 
-```JSON
+```Bash
 sinohope-mpc-node
 ├── config.toml
 ├── node.sh

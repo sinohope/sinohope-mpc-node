@@ -27,7 +27,7 @@ sinohope-mpc-node
 ```
 - MPC Node初始化成功后，会自动创建asset.db文件和logs目录：
 
-```JSON
+```Bash
 sinohope-mpc-node
 ├── config.toml
 ├── node.sh
